@@ -1,314 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Student Registration</title>
-
-<!-- ============ STYLES ============ -->
-<style>
-body { font-family: system-ui, sans-serif; background: #f3f4f6; margin: 0; padding: 20px; }
-.card { max-width: 480px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
-.card.wide { max-width: 900px; }
-h1 { margin-top: 0; font-size: 1.4rem; }
-label { display: block; margin: 14px 0 4px; font-weight: 600; font-size: .9rem; }
-input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-.radio { display: inline-block; margin-right: 14px; font-weight: normal; }
-.radio input { width: auto; }
-button { padding: 10px 16px; background: #2563eb; color: #fff; border: 0; border-radius: 8px; font-size: .95rem; cursor: pointer; }
-button.full { width: 100%; margin-top: 20px; }
-button.danger { background: #dc2626; }
-button.link { background: none; color: #2563eb; padding: 0; }
-.err { background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; }
-.ok { background: #dcfce7; color: #166534; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; }
-.tbl { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-.row { display: flex; gap: 8px; margin-bottom: 14px; }
-.nav { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.hint { font-size: .8rem; color: #6b7280; margin-top: 14px; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Registration</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+    .card.wide {
+      max-width: 920px;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+    label {
+      display: block;
+      margin: 14px 0 4px;
+      font-weight: 600;
+      font-size: .9rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .radio {
+      display: inline-block;
+      margin-right: 14px;
+      font-weight: normal;
+    }
+    .radio input {
+      width: auto;
+    }
+    button {
+      padding: 10px 16px;
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      font-size: .95rem;
+      cursor: pointer;
+    }
+    button.full {
+      width: 100%;
+      margin-top: 20px;
+    }
+    button.danger {
+      background: #dc2626;
+    }
+    button.link {
+      background: none;
+      color: #2563eb;
+      padding: 0;
+    }
+    .err {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .ok {
+      background: #dcfce7;
+      color: #166534;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .tbl {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .nav {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .hint {
+      font-size: .8rem;
+      color: #6b7280;
+      margin-top: 14px;
+    }
+    .config-warning {
+      background: #fff7ed;
+      color: #9a5b00;
+      border: 1px solid #fdba74;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+  </style>
 </head>
-
 <body>
-<div id="app"></div>
+  <div id="app"></div>
 
-<script>
-/* =====================================================
-   SECTIONS IN THIS FILE
-   1. CONFIG   - settings (courses, rules)
-   2. STORE    - saving/loading data (localStorage)
-   3. UTILS    - helpers and validation
-   4. AUTH     - register and login screens
-   5. PAGES    - profile and admin student list
-   6. START    - runs the app
-   ===================================================== */
-
-/* ---------- 1. CONFIG ---------- */
-const CONFIG = {
-  courses: ['Computer Science', 'Business Administration', 'Engineering', 'Medicine', 'Arts'],
-  genders: ['Male', 'Female', 'Other'],
-  perPage: 20,
-  minAgeYears: 10,
-  minPasswordLength: 8,
-  dbKey: 'students_db',
-  sessionKey: 'students_session'
-};
-
-/* ---------- 2. STORE ---------- */
-const Store = {
-  all() {
-    try { return JSON.parse(localStorage.getItem(CONFIG.dbKey)) || []; }
-    catch { return []; }
-  },
-  save(list) { localStorage.setItem(CONFIG.dbKey, JSON.stringify(list)); },
-  add(student) { const list = this.all(); list.push(student); this.save(list); },
-  remove(id) { this.save(this.all().filter(s => s.id !== id)); },
-  findByEmail(email) {
-    return this.all().find(s => s.email.toLowerCase() === email.trim().toLowerCase());
-  },
-  findById(id) { return this.all().find(s => s.id === id); },
-
-  // Session (cleared when the tab closes)
-  login(id) { sessionStorage.setItem(CONFIG.sessionKey, id); },
-  logout() { sessionStorage.removeItem(CONFIG.sessionKey); },
-  currentUser() {
-    const id = sessionStorage.getItem(CONFIG.sessionKey);
-    return id ? this.findById(id) : undefined;
-  }
-};
-
-/* ---------- 3. UTILS ---------- */
-const Utils = {
-  root: document.getElementById('app'),
-
-  render(html) { this.root.innerHTML = html; },
-
-  // Escape user text before putting it in HTML (prevents XSS)
-  esc(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  },
-
-  alerts(type, messages) {
-    return messages.map(m => `<div class="${type}">${this.esc(m)}</div>`).join('');
-  },
-
-  newSalt() {
-    return [...crypto.getRandomValues(new Uint8Array(16))]
-      .map(b => b.toString(16).padStart(2, '0')).join('');
-  },
-
-  async hashPassword(password, salt) {
-    const data = new TextEncoder().encode(salt + password);
-    if (window.crypto && crypto.subtle) {
-      const buf = await crypto.subtle.digest('SHA-256', data);
-      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-    return btoa(salt + password); // demo-only fallback
-  },
-
-  // Returns an array of error messages (empty = valid)
-  validateRegistration(f) {
-    const errors = [];
-    if (f.full_name.length < 3 || f.full_name.length > 100) errors.push('Full name must be 3-100 characters.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) errors.push('Enter a valid email address.');
-    if (!/^\+?[0-9]{7,15}$/.test(f.phone)) errors.push('Phone must be 7-15 digits (optional leading +).');
-
-    const dob = new Date(f.dob);
-    const limit = new Date();
-    limit.setFullYear(limit.getFullYear() - CONFIG.minAgeYears);
-    if (!f.dob || isNaN(dob) || dob > limit) errors.push('Enter a valid date of birth.');
-
-    if (!CONFIG.genders.includes(f.gender)) errors.push('Select a gender.');
-    if (!CONFIG.courses.includes(f.course)) errors.push('Select a valid course.');
-    if ((f.password || '').length < CONFIG.minPasswordLength)
-      errors.push(`Password must be at least ${CONFIG.minPasswordLength} characters.`);
-    if (f.password !== f.confirm) errors.push('Passwords do not match.');
-    if (!errors.length && Store.findByEmail(f.email)) errors.push('This email is already registered.');
-    return errors;
-  }
-};
-
-/* ---------- 4. AUTH ---------- */
-const Auth = {
-  showRegister(errors = [], old = {}, success = false) {
-    const e = Utils.esc;
-    Utils.render(`
-      <div class="card">
-        <h1>Student Registration</h1>
-        ${success ? Utils.alerts('ok', ['Registration successful! You can log in now.']) : ''}
-        ${Utils.alerts('err', errors)}
-        <form id="regForm" novalidate>
-          <label>Full Name</label>
-          <input name="full_name" value="${e(old.full_name || '')}">
-          <label>Email</label>
-          <input type="email" name="email" value="${e(old.email || '')}">
-          <label>Phone</label>
-          <input name="phone" value="${e(old.phone || '')}">
-          <label>Date of Birth</label>
-          <input type="date" name="dob" value="${e(old.dob || '')}">
-          <label>Gender</label>
-          ${CONFIG.genders.map(g => `<label class="radio"><input type="radio" name="gender" value="${g}" ${old.gender === g ? 'checked' : ''}> ${g}</label>`).join('')}
-          <label>Course</label>
-          <select name="course">
-            <option value="">-- Select --</option>
-            ${CONFIG.courses.map(c => `<option ${old.course === c ? 'selected' : ''}>${e(c)}</option>`).join('')}
-          </select>
-          <label>Password</label>
-          <input type="password" name="password">
-          <label>Confirm Password</label>
-          <input type="password" name="confirm">
-          <button class="full" type="submit">Register</button>
-        </form>
-        <div class="nav"><span>Already registered?</span><button class="link" id="toLogin">Log in</button></div>
-        <div class="hint">The first person to register becomes the admin.</div>
-      </div>`);
-
-    document.getElementById('toLogin').onclick = () => Auth.showLogin();
-    document.getElementById('regForm').onsubmit = Auth.handleRegister;
-  },
-
-  async handleRegister(ev) {
-    ev.preventDefault();
-    const f = Object.fromEntries(new FormData(ev.target));
-    ['full_name', 'email', 'phone', 'dob'].forEach(k => f[k] = (f[k] || '').trim());
-    f.gender = f.gender || '';
-
-    const errors = Utils.validateRegistration(f);
-    if (errors.length) return Auth.showRegister(errors, f);
-
-    const salt = Utils.newSalt();
-    Store.add({
-      id: crypto.randomUUID(),
-      full_name: f.full_name, email: f.email, phone: f.phone, dob: f.dob,
-      gender: f.gender, course: f.course,
-      salt, password_hash: await Utils.hashPassword(f.password, salt),
-      is_admin: Store.all().length === 0, // first user is admin
-      created_at: new Date().toLocaleString()
-    });
-    Auth.showRegister([], {}, true);
-  },
-
-  showLogin(error = '', email = '') {
-    Utils.render(`
-      <div class="card">
-        <h1>Student Login</h1>
-        ${error ? Utils.alerts('err', [error]) : ''}
-        <form id="loginForm">
-          <label>Email</label>
-          <input type="email" name="email" value="${Utils.esc(email)}">
-          <label>Password</label>
-          <input type="password" name="password">
-          <button class="full" type="submit">Log in</button>
-        </form>
-        <div class="nav"><button class="link" id="toReg">Create an account</button></div>
-      </div>`);
-
-    document.getElementById('toReg').onclick = () => Auth.showRegister();
-    document.getElementById('loginForm').onsubmit = Auth.handleLogin;
-  },
-
-  async handleLogin(ev) {
-    ev.preventDefault();
-    const { email, password } = Object.fromEntries(new FormData(ev.target));
-    const user = Store.findByEmail(email);
-    if (user && (await Utils.hashPassword(password, user.salt)) === user.password_hash) {
-      Store.login(user.id);
-      return Pages.showDashboard();
-    }
-    Auth.showLogin('Incorrect email or password.', email);
-  },
-
-  logout() {
-    Store.logout();
-    Auth.showLogin();
-  }
-};
-
-/* ---------- 5. PAGES ---------- */
-const Pages = {
-  showDashboard() {
-    const s = Store.currentUser();
-    if (!s) return Auth.showLogin();
-    const e = Utils.esc;
-
-    Utils.render(`
-      <div class="card">
-        <h1>Welcome, ${e(s.full_name)}</h1>
-        <table>
-          <tr><th>Email</th><td>${e(s.email)}</td></tr>
-          <tr><th>Phone</th><td>${e(s.phone)}</td></tr>
-          <tr><th>Date of Birth</th><td>${e(s.dob)}</td></tr>
-          <tr><th>Gender</th><td>${e(s.gender)}</td></tr>
-          <tr><th>Course</th><td>${e(s.course)}</td></tr>
-          <tr><th>Registered</th><td>${e(s.created_at)}</td></tr>
-        </table>
-        <div class="nav">
-          ${s.is_admin ? '<button id="allBtn">All students</button>' : ''}
-          <button class="danger" id="outBtn">Log out</button>
-        </div>
-      </div>`);
-
-    if (s.is_admin) document.getElementById('allBtn').onclick = () => Pages.showStudents();
-    document.getElementById('outBtn').onclick = Auth.logout;
-  },
-
-  showStudents(q = '', page = 1, msg = '') {
-    const me = Store.currentUser();
-    if (!me || !me.is_admin) return Auth.showLogin();
-    const e = Utils.esc;
-
-    const term = q.trim().toLowerCase();
-    const matches = Store.all().filter(s =>
-      !term || [s.full_name, s.email, s.course].some(v => v.toLowerCase().includes(term)));
-    const pages = Math.max(1, Math.ceil(matches.length / CONFIG.perPage));
-    page = Math.min(Math.max(1, page), pages);
-    const rows = matches.slice((page - 1) * CONFIG.perPage, page * CONFIG.perPage);
-
-    Utils.render(`
-      <div class="card wide">
-        <h1>All Students (${matches.length})</h1>
-        ${msg ? Utils.alerts('ok', [msg]) : ''}
-        <form id="searchForm" class="row">
-          <input name="q" placeholder="Search name, email, course" value="${e(q)}">
-          <button type="submit">Search</button>
-        </form>
-        <div class="tbl"><table>
-          <tr><th>Name</th><th>Email</th><th>Phone</th><th>DOB</th><th>Gender</th><th>Course</th><th>Registered</th><th></th></tr>
-          ${rows.map(s => `<tr>
-            <td>${e(s.full_name)}</td><td>${e(s.email)}</td><td>${e(s.phone)}</td>
-            <td>${e(s.dob)}</td><td>${e(s.gender)}</td><td>${e(s.course)}</td><td>${e(s.created_at)}</td>
-            <td>${s.id === me.id ? '' : `<button class="danger" data-del="${e(s.id)}">Delete</button>`}</td>
-          </tr>`).join('') || '<tr><td colspan="8">No students found.</td></tr>'}
-        </table></div>
-        <div class="nav">
-          ${page > 1 ? '<button id="prev">Prev</button>' : ''}
-          <span>Page ${page} of ${pages}</span>
-          ${page < pages ? '<button id="next">Next</button>' : ''}
-          <button id="back">Back</button>
-        </div>
-      </div>`);
-
-    document.getElementById('searchForm').onsubmit = ev => {
-      ev.preventDefault();
-      Pages.showStudents(new FormData(ev.target).get('q') || '', 1);
+  <script>
+    const SUPABASE_CONFIG = {
+      url: 'https://YOUR_PROJECT_ID.supabase.co',
+      anonKey: 'YOUR_ANON_KEY'
     };
-    document.getElementById('back').onclick = Pages.showDashboard;
-    if (page > 1) document.getElementById('prev').onclick = () => Pages.showStudents(q, page - 1);
-    if (page < pages) document.getElementById('next').onclick = () => Pages.showStudents(q, page + 1);
-    document.querySelectorAll('[data-del]').forEach(btn => {
-      btn.onclick = () => {
-        if (!confirm('Delete this student?')) return;
-        Store.remove(btn.dataset.del);
-        Pages.showStudents(q, page, 'Student deleted.');
-      };
-    });
-  }
-};
 
-/* ---------- 6. START ---------- */
-Store.currentUser() ? Pages.showDashboard() : Auth.showRegister();
-</script>
+    const app = {
+      supabase: null,
+      user: null,
+      student: null
+    };
+
+    const CONFIG = {
+      courses: ['Computer Science', 'Business Administration', 'Engineering', 'Medicine', 'Arts'],
+      genders: ['Male', 'Female', 'Other'],
+      perPage: 20,
+      minAgeYears: 10,
+      minPasswordLength: 8
+    };
+
+    const Utils = {
+      root: document.getElementById('app'),
+      render(html) {
+        this.root.innerHTML = html;
+      },
+      esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c =>
+          ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      },
+      alerts(type, messages) {
+        return messages.map(m => `<div class="${type}">${this.esc(m)}</div>`).join('');
+      },
+      validateRegistration(f) {
+        const errors = [];
+        if (f.full_name.length < 3 || f.full_name.length > 100) errors.push('Full name must be 3-100 characters.');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) errors.push('Enter a valid email address.');
+        if (!/^\+?[0-9]{7,15}$/.test(f.phone)) errors.push('Phone must be 7-15 digits (optional leading +).');
+
+        const dob = new Date(f.dob);
+        const limit = new Date();
+        limit.setFullYear(limit.getFullYear() - CONFIG.minAgeYears);
+        if (!f.dob || isNaN(dob) || dob > limit) errors.push('Enter a valid date of birth.');
+
+        if (!CONFIG.genders.includes(f.gender)) errors.push('Select a gender.');
+        if (!CONFIG.courses.includes(f.course)) errors.push('Select a valid course.');
+        if ((f.password || '').length < CONFIG.minPasswordLength) {
+          errors.push(`Password must be at least ${CONFIG.minPasswordLength} characters.`);
+        }
+        if (f.password !== f.confirm) errors.push('Passwords do not match.');
+        return errors;
+      }
+    };
+
+    function isSupabaseConfigured() {
+      return SUPABASE_CONFIG.url && SUPABASE_CONFIG.url.includes('supabase.co') && SUPABASE_CONFIG.anonKey && SUPABASE_CONFIG.anonKey !== 'YOUR_ANON_KEY';
+    }
+
+    function initSupabase() {
+      if (!isSupabaseConfigured()) {
+        Utils.render(`
+          <div class="card">
+            <div class="config-warning">
+              Supabase is not configured yet. Update the values in the <strong>SUPABASE_CONFIG</strong> object in this file with your project URL and anon key.
+            </div>
+            <h1>Student Registration</h1>
+            <p>After adding your Supabase credentials, refresh the page.</p>
+          </div>
+        `);
+        return null;
+      }
+
+      app.supabase = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+      return app.supabase;
+    }
+
+    async function getStudentRecordByEmail(email) {
+      if (!app.supabase) return null;
+      const { data, error } = await app.supabase
+        .from('students')
+        .select('*')
+        .ilike('email', email)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data || null;
+    }
+
+    async function getAllStudents() {
+      if (!app.supabase) return [];
+      const { data, error } = await app.supabase
+        .from('students')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    }
+
+    async function deleteStudent(id) {
+      if (!app.supabase) throw new Error('Supabase is not configured');
+      const { error } = await app.supabase.from('students').delete().eq('id', id);
+      if (error) throw error;
+    }
+
+    async function ensureFirstUserIsAdmin() {
+      const { data, error } = await app.supabase.from('students').select('id').limit(1);
+      if (error) throw error;
+      return !data || data.length === 0;
+    }
+
+    const Auth = {
+      showRegister(errors = [], old = {}, success = false) {
+        const e = Utils.esc;
+        Utils.render(`
+          <div class="card">
+            <h1>Student Registration</h1>
+            ${success ? Utils.alerts('ok', ['Registration successful! You can log in now.']) : ''}
+            ${Utils.alerts('err', errors)}
+            <form id="regForm" novalidate>
+              <label>Full Name</label>
+              <input name="full_name" value="${e(old.full_name || '')}" />
+              <label>Email</label>
+              <input type="email" name="email" value="${e(old.email || '')}" />
+              <label>Phone</label>
+              <input name="phone" value="${e(old.phone || '')}" />
+              <label>Date of Birth</label>
+              <input type="date" name="dob" value="${e(old.dob || '')}" />
+              <label>Gender</label>
+              ${CONFIG.genders.map(g => `<label class="radio"><input type="radio" name="gender" value="${g}" ${old.gender === g ? 'checked' : ''}> ${g}</label>`).join('')}
+              <label>Course</label>
+              <select name="course">
+                <option value="">-- Select --</option>
+                ${CONFIG.courses.map(c => `<option ${old.course === c ? 'selected' : ''}>${e(c)}</option>`).join('')}
+              </select>
+              <label>Password</label>
+              <input type="password" name="password" />
+              <label>Confirm Password</label>
+              <input type="password" name="confirm" />
+              <button class="full" type="submit">Register</button>
+            </form>
+            <div class="nav"><span>Already registered?</span><button class="link" id="toLogin">Log in</button></div>
+            <div class="hint">The first person to register becomes the admin.</div>
+          </div> `);
+
+        document.getElementById('toLogin').onclick = () => Auth.showLogin();
+        document.getElementById('regForm').onsubmit = Auth.handleRegister;
+      },
+
+      async handleRegister(ev) {
+        ev.preventDefault();
+        const f = Object.fromEntries(new FormData(ev.target));
+        ['full_name', 'email', 'phone', 'dob'].forEach(k => f[k] = (f[k] || '').trim());
+        f.gender = f.gender || '';
+
+        const errors = Utils.validateRegistration(f);
+        if (errors.length) return Auth.showRegister(errors, f);
+
+        try {
+          const { data: signUpData, error: signUpError } = await app.supabase.auth.signUp({
+            email: f.email,
+            password: f.password
+          });
+
+          if (signUpError) throw signUpError;
+
+          const isFirstUser = await ensureFirstUserIsAdmin();
+
+          const { error: insertError } = await app.supabase.from('students').insert({
+            full_name: f.full_name,
+            email: f.email,
+            phone: f.phone,
+            dob: f.dob,
+            gender: f.gender,
+            course: f.course,
+            is_admin: isFirstUser,
+            id: signUpData.user?.id || crypto.randomUUID()
+          });
+
+          if (insertError) throw insertError;
+
+          Auth.showRegister([], {}, true);
+        } catch (error) {
+          Auth.showRegister([error.message || 'Registration failed.'], f);
+        }
+      },
+
+      showLogin(error = '', email = '') {
+        Utils.render(`
+          <div class="card">
+            <h1>Student Login</h1>
+            ${error ? Utils.alerts('err', [error]) : ''}
+            <form id="loginForm">
+              <label>Email</label>
+              <input type="email" name="email" value="${Utils.esc(email)}" />
+              <label>Password</label>
+              <input type="password" name="password" />
+              <button class="full" type="submit">Log in</button>
+            </form>
+            <div class="nav"><button class="link" id="toReg">Create an account</button></div>
+          </div>`);
+
+        document.getElementById('toReg').onclick = () => Auth.showRegister();
+        document.getElementById('loginForm').onsubmit = Auth.handleLogin;
+      },
+
+      async handleLogin(ev) {
+        ev.preventDefault();
+        const { email, password } = Object.fromEntries(new FormData(ev.target));
+
+        try {
+          const { data, error } = await app.supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+
+          app.user = data.user;
+          const student = await getStudentRecordByEmail(email);
+          app.student = student;
+
+          if (!student) {
+            throw new Error('No student record found for this account.');
+          }
+
+          Pages.showDashboard();
+        } catch (error) {
+          Auth.showLogin('Incorrect email or password.', email);
+        }
+      },
+
+      async logout() {
+        if (!app.supabase) return Auth.showLogin();
+        const { error } = await app.supabase.auth.signOut();
+        if (error) console.error(error);
+        app.user = null;
+        app.student = null;
+        Auth.showLogin();
+      }
+    };
+
+    const Pages = {
+      async showDashboard() {
+        if (!app.supabase || !app.user) return Auth.showLogin();
+
+        try {
+          const student = await getStudentRecordByEmail(app.user.email);
+          app.student = student;
+
+          if (!student) {
+            Auth.showLogin('Unable to load your profile.', app.user.email || '');
+            return;
+          }
+
+          Utils.render(`
+            <div class="card">
+              <h1>Welcome, ${Utils.esc(student.full_name)}</h1>
+              <table>
+                <tr><th>Email</th><td>${Utils.esc(student.email)}</td></tr>
+                <tr><th>Phone</th><td>${Utils.esc(student.phone || '')}</td></tr>
+                <tr><th>Date of Birth</th><td>${Utils.esc(student.dob || '')}</td></tr>
+                <tr><th>Gender</th><td>${Utils.esc(student.gender || '')}</td></tr>
+                <tr><th>Course</th><td>${Utils.esc(student.course || '')}</td></tr>
+                <tr><th>Registered</th><td>${Utils.esc(new Date(student.created_at).toLocaleString())}</td></tr>
+              </table>
+              <div class="nav">
+                ${student.is_admin ? '<button id="allBtn">All students</button>' : ''}
+                <button class="danger" id="outBtn">Log out</button>
+              </div>
+            </div>
+          `);
+
+          if (student.is_admin) document.getElementById('allBtn').onclick = () => Pages.showStudents();
+          document.getElementById('outBtn').onclick = Auth.logout;
+        } catch (error) {
+          Auth.showLogin(error.message || 'Unable to load dashboard.', app.user?.email || '');
+        }
+      },
+
+      async showStudents(q = '', page = 1, msg = '') {
+        if (!app.supabase || !app.user) return Auth.showLogin();
+
+        try {
+          const profile = await getStudentRecordByEmail(app.user.email);
+          if (!profile || !profile.is_admin) return Auth.showLogin();
+
+          const all = await getAllStudents();
+          const term = q.trim().toLowerCase();
+          const matches = all.filter(s =>
+            !term || [s.full_name, s.email, s.course].some(v => (v || '').toLowerCase().includes(term))
+          );
+
+          const pages = Math.max(1, Math.ceil(matches.length / CONFIG.perPage));
+          page = Math.min(Math.max(1, page), pages);
+          const rows = matches.slice((page - 1) * CONFIG.perPage, page * CONFIG.perPage);
+
+          Utils.render(`
+            <div class="card wide">
+              <h1>All Students (${matches.length})</h1>
+              ${msg ? Utils.alerts('ok', [msg]) : ''}
+              <form id="searchForm" class="row">
+                <input name="q" placeholder="Search name, email, course" value="${Utils.esc(q)}" />
+                <button type="submit">Search</button>
+              </form>
+              <div class="tbl">
+                <table>
+                  <tr><th>Name</th><th>Email</th><th>Phone</th><th>DOB</th><th>Gender</th><th>Course</th><th>Registered</th><th></th></tr>
+                  ${rows.map(s => `
+                    <tr>
+                      <td>${Utils.esc(s.full_name)}</td>
+                      <td>${Utils.esc(s.email)}</td>
+                      <td>${Utils.esc(s.phone || '')}</td>
+                      <td>${Utils.esc(s.dob || '')}</td>
+                      <td>${Utils.esc(s.gender || '')}</td>
+                      <td>${Utils.esc(s.course || '')}</td>
+                      <td>${Utils.esc(new Date(s.created_at).toLocaleString())}</td>
+                      <td>${s.email === app.user.email ? '' : `<button class="danger" data-del="${Utils.esc(s.id)}">Delete</button>`}</td>
+                    </tr>
+                  `).join('') || '<tr><td colspan="8">No students found.</td></tr>'}
+                </table>
+              </div>
+              <div class="nav">
+                ${page > 1 ? '<button id="prev">Prev</button>' : ''}
+                <span>Page ${page} of ${pages}</span>
+                ${page < pages ? '<button id="next">Next</button>' : ''}
+                <button id="back">Back</button>
+              </div>
+            </div>
+          `);
+
+          document.getElementById('searchForm').onsubmit = ev => {
+            ev.preventDefault();
+            Pages.showStudents(new FormData(ev.target).get('q') || '', 1);
+          };
+          document.getElementById('back').onclick = Pages.showDashboard;
+          if (page > 1) document.getElementById('prev').onclick = () => Pages.showStudents(q, page - 1);
+          if (page < pages) document.getElementById('next').onclick = () => Pages.showStudents(q, page + 1);
+
+          document.querySelectorAll('[data-del]').forEach(btn => {
+            btn.onclick = async () => {
+              if (!confirm('Delete this student?')) return;
+              try {
+                await deleteStudent(btn.dataset.del);
+                Pages.showStudents(q, page, 'Student deleted.');
+              } catch (error) {
+                alert(error.message || 'Delete failed.');
+              }
+            };
+          });
+        } catch (error) {
+          Auth.showLogin(error.message || 'Unable to load student list.', app.user?.email || '');
+        }
+      }
+    };
+
+    async function bootstrap() {
+      const client = initSupabase();
+      if (!client) return;
+
+      const { data: { session } } = await app.supabase.auth.getSession();
+      if (session?.user) {
+        app.user = session.user;
+        const record = await getStudentRecordByEmail(session.user.email);
+        app.student = record;
+        Pages.showDashboard();
+      } else {
+        Auth.showRegister();
+      }
+    }
+
+    bootstrap();
+  </script>
 </body>
 </html>
